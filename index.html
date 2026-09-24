@@ -78,8 +78,10 @@ const CONFIG = {
 ],
 };
 /* ================================== */
-CONFIG.photos=CONFIG.photos.map(f=>({src:'photos/'+encodeURIComponent(f),cap:decodeURIComponent(f).replace(/\.[a-z0-9]+$/i,'').replace(/[-_]+/g,' ').replace(/^[\d০-৯]+\s*/,'').trim()||'আমাদের স্মৃতি'}));
-
+CONFIG.photos = CONFIG.photos.map(f => ({
+  src: 'photos/' + encodeURIComponent(f),
+  ...
+}));
 const $=s=>document.querySelector(s);
 $('#title').textContent='শুভ জন্মদিন, '+CONFIG.name;
 $('#t2').textContent='শুভ জন্মদিন, '+CONFIG.name;
