@@ -66,26 +66,30 @@ const CONFIG = {
   gifts: ['কুপন: তোমার পছন্দের যেকোনো জায়গায় ডিনার, আমার পক্ষ থেকে।','কুপন: একটা আলসে সকাল আর বিছানায় ব্রেকফাস্ট।','কুপন: পুরো একটা দিন সব সিদ্ধান্ত তোমার।'],
   reasons: ['তোমার হাসি আমার খারাপ দিনও ঠিক করে দেয়।','সাধারণ দিনকেও তুমি বিশেষ করে তোলো।','কেউ না দেখলেও তুমি সবার প্রতি সদয়।','আমার আগেই তুমি আমার ওপর বিশ্বাস রাখো।','তুমি যেখানে, আমার ঘর সেখানেই।','ছোট পরিকল্পনাকেও তুমি বড় স্মৃতি বানিয়ে ফেলো।','তুমি একই সাথে সাহসী আর কোমল।','আমার সেরা বন্ধুকেই আমি বিয়ে করতে যাচ্ছি।'],
   secret: 'তুমি গোপন হার্টটা খুঁজে পেয়েছ। এই ওয়েবপেজে যতটুকু ধরে, তার চেয়েও বেশি ভালোবাসি তোমাকে।',
-  // photos/ ফোল্ডারের ছবির ফাইলের নাম এখানে লেখো। ফাইলের নামই ছবির শিরোনাম হবে
-  // (হাইফেন/আন্ডারস্কোর বদলে স্পেস হবে, শুরুর নম্বর ক্রম ঠিক করবে কিন্তু দেখাবে না)।
-photos: [
-      'আমাদের-প্রথম-দেখা.jpg',
-      'আমার-প্রিয়-দিন.jpg',
-      'একসাথে-ঘুরতে-যাওয়া.jpg',
-      'তুমি-আর-আমি.jpg',
-      'তোমার-হাসি.jpg',
-      'সবচেয়ে-সুন্দর-মুহূর্ত.jpg'
-    ],
+  photos: [
+    'আমাদের-প্রথম-দেখা.jpg',
+    'আমার-প্রিয়-দিন.jpg',
+    'একসাথে-ঘুরতে-যাওয়া.jpg',
+    'তুমি-আর-আমি.jpg',
+    'তোমার-হাসি.jpg',
+    'সবচেয়ে-সুন্দর-মুহূর্ত.jpg'
+  ],
 };
 /* ================================== */
-CONFIG.photos = CONFIG.photos.map(f => ({
-  src: 'photos/' + encodeURIComponent(f),
-  ...
-}));
-CONFIG.photos = CONFIG.photos.map(f => ({
-  src: 'photos/' + encodeURIComponent(f),
-  ...
-}));
+CONFIG.photos = CONFIG.photos.map(f => {
+  const cap = f.replace(/\.[^/.]+$/, '').replace(/^\d+[-_]?/, '').replace(/[-_]/g, ' ');
+  return {
+    src: 'photos/' + encodeURIComponent(f),
+    cap: cap
+  };
+});
+
+const $=s=>document.querySelector(s);
+$('#title').textContent='শুভ জন্মদিন, '+CONFIG.name;
+$('#t2').textContent='শুভ জন্মদিন, '+CONFIG.name;
+$('#nt').textContent=CONFIG.note;
+$('#sg').textContent='অনেক ভালোবাসায়'+(CONFIG.from?', '+CONFIG.from:'');
+
 const cv=$('#c'),R=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:false});
 R.setPixelRatio(Math.min(devicePixelRatio,2));
 const S=new THREE.Scene();S.background=new THREE.Color(0x04050f);S.fog=new THREE.Fog(0x04050f,10,30);
@@ -112,7 +116,8 @@ for(let i=0;i<HN;i++){const a=Math.random()*6.283,r=3+Math.random()*9;hp[i*3]=Ma
 const hg=new THREE.BufferGeometry();hg.setAttribute('position',new THREE.BufferAttribute(hp,3));
 S.add(new THREE.Points(hg,new THREE.PointsMaterial({map:heartTex(),color:0xff8fb1,size:.55,transparent:true,opacity:.75,depthWrite:false,alphaTest:.05})));
 
-const labs=[];function lab(t){const c=document.createElement('canvas');c.width=640;c.height=100;const x=c.getContext('2d');x.font='600 46px "Anek Bangla",sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillStyle='#d6f6ff';x.shadowColor='#00e5ff';x.shadowBlur=14;x.fillText(t,320,50,600);return c}
+const labs=[];function lab(t){const c=document.createElement('canvas');c.width=640;c.height=100;const x=c.getContext('2d');x.font='600 46px "Anek Bangla",sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillStyle='#d6f6ff';x.shadowColor='#00e5ff';x.shadowBlur=14;x.fillText(t||'',320,50,600);return c}
+
 /* photo ring */
 const ring=new THREE.Group();S.add(ring);
 const items=[],N=CONFIG.photos.length,RAD=Math.max(5.2,N*.72);
@@ -219,7 +224,7 @@ function tick(dt,t){if(an)mic(dt);
  if(fwT>0){fwT-=dt;if(Math.random()<dt*3)fw((Math.random()-.5)*12,2+Math.random()*4,-3-Math.random()*4)}
  for(let i=0;i<FN;i++){const j=i*3;if(fc[j]+fc[j+1]+fc[j+2]<.02)continue;fv[i].y-=2.5*dt;fp[j]+=fv[i].x*dt;fp[j+1]+=fv[i].y*dt;fp[j+2]+=fv[i].z*dt;fv[i].multiplyScalar(.985);fc[j]*=.975;fc[j+1]*=.975;fc[j+2]*=.975}
  fg.attributes.position.needsUpdate=fg.attributes.color.needsUpdate=true}
-/* mic blow-out */
+
 /* sound effects (synthesised) */
 let sx=null;const A=()=>{if(!sx)sx=new (window.AudioContext||window.webkitAudioContext)();if(sx.state==='suspended')sx.resume();return sx};
 function tone(f,t0,d,v=.15,ty='sine'){const c=A(),o=c.createOscillator(),g=c.createGain(),T=c.currentTime+t0;o.type=ty;o.frequency.value=f;g.gain.setValueAtTime(.0001,T);g.gain.exponentialRampToValueAtTime(v,T+.02);g.gain.exponentialRampToValueAtTime(.0001,T+d);o.connect(g);g.connect(c.destination);o.start(T);o.stop(T+d+.05)}
@@ -260,6 +265,7 @@ $('#mu').onclick=()=>music(!mon);
  if(d>0&&d<40*864e5)el.textContent=bn(Math.floor(d/864e5))+' দিন '+bn(Math.floor(d/36e5)%24)+' ঘণ্টা '+bn(Math.floor(d/6e4)%60)+' মিনিট '+bn(Math.floor(d/1e3)%60)+' সেকেন্ড বাকি তোমার জন্মদিনে';
  else el.textContent=(n.getMonth()===8&&n.getDate()===25)?'আজ তোমার জন্মদিন!':''}
 u();setInterval(u,1000)})();
+
 /* futuristic scenery */
 const grid=new THREE.GridHelper(80,60,0x00e5ff,0x14306b);grid.position.y=-4.5;grid.material.transparent=true;grid.material.opacity=.4;S.add(grid);
 const orb=[0x00e5ff,0xff2e93].map((c,i)=>{const r=new THREE.Mesh(new THREE.TorusGeometry(2.1+i*.5,.02,8,120),new THREE.MeshBasicMaterial({color:c}));r.rotation.x=1.2+i;S.add(r);return r});
@@ -270,6 +276,7 @@ const lv=new THREE.Sprite(new THREE.SpriteMaterial({map:lvTex(),transparent:true
 Promise.all(['700','600'].map(w=>document.fonts.load(w+' 40px "Anek Bangla"','অ'))).then(()=>{lv.material.map=lvTex();lv.material.needsUpdate=true;
  labs.forEach(([m,t])=>{m.material.map=new THREE.CanvasTexture(lab(t));m.material.needsUpdate=true});
  cards.forEach((g,i)=>{const q=g.userData.p.children[1].material;q.map=face(CONFIG.reasons[i],0);q.needsUpdate=true})}).catch(()=>{});
+
 /* love counter */
 (function(){const el=$('#lc');if(!CONFIG.since)return;const bn=n=>n.toLocaleString('bn-BD');function u(){const d=new Date()-new Date(CONFIG.since);el.style.display=page==='ring'?'':'none';
  el.textContent='একসাথে '+bn(Math.floor(d/864e5))+' দিন '+bn(Math.floor(d/36e5)%24)+' ঘণ্টা '+bn(Math.floor(d/6e4)%60)+' মিনিট '+bn(Math.floor(d/1e3)%60)+' সেকেন্ড ♥'}u();setInterval(u,1000)})();
