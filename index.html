@@ -78,10 +78,13 @@ photos: [
     ],
 };
 /* ================================== */
-CONFIG.photos = CONFIG.photos.map(f => ({
-  src: 'photos/' + encodeURIComponent(f),
-  ...
-}));
+CONFIG.photos = CONFIG.photos.map(f => {
+  const cap = f.replace(/\.[^/.]+$/, '').replace(/^\d+[-_]?/, '').replace(/[-_]/g, ' ');
+  return {
+    src: 'photos/' + encodeURIComponent(f),
+    cap: cap
+  };
+});
 const $=s=>document.querySelector(s);
 $('#title').textContent='শুভ জন্মদিন, '+CONFIG.name;
 $('#t2').textContent='শুভ জন্মদিন, '+CONFIG.name;
