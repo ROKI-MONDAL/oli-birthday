@@ -82,12 +82,10 @@ CONFIG.photos = CONFIG.photos.map(f => ({
   src: 'photos/' + encodeURIComponent(f),
   ...
 }));
-const $=s=>document.querySelector(s);
-$('#title').textContent='শুভ জন্মদিন, '+CONFIG.name;
-$('#t2').textContent='শুভ জন্মদিন, '+CONFIG.name;
-$('#nt').textContent=CONFIG.note;
-$('#sg').textContent='অনেক ভালোবাসায়'+(CONFIG.from?', '+CONFIG.from:'');
-
+CONFIG.photos = CONFIG.photos.map(f => ({
+  src: 'photos/' + encodeURIComponent(f),
+  ...
+}));
 const cv=$('#c'),R=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:false});
 R.setPixelRatio(Math.min(devicePixelRatio,2));
 const S=new THREE.Scene();S.background=new THREE.Color(0x04050f);S.fog=new THREE.Fog(0x04050f,10,30);
