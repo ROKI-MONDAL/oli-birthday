@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>শুভ জন্মদিন, ওলি</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--night:#04050f;--rose:#ff2e93;--gold:#00e5ff;--blush:#d6f6ff;--ink:#eefaff}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%;overflow:hidden;background:var(--night);color:var(--ink);font-family:'Anek Bangla','Noto Sans Bengali',system-ui,sans-serif;-webkit-tap-highlight-color:transparent}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+#c:active{cursor:grabbing}
+.ov{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;transition:opacity .9s ease,visibility .9s}
+.ov.off{opacity:0;visibility:hidden}
+#intro{background:radial-gradient(circle at 50% 40%,#0d2a4a 0%,var(--night) 70%);z-index:5}
+h1{font-weight:700;font-size:clamp(2.2rem,8vw,4.6rem);line-height:1.35;text-shadow:0 0 30px #00e5ff88,0 0 60px #ff2e9355}#lc{color:var(--rose);font-size:.95rem;font-weight:600;text-shadow:0 0 12px #ff2e93aa}
+#intro p{margin:18px 0 34px;color:var(--gold);font-size:clamp(1rem,3.4vw,1.25rem)}
+button{font:inherit;cursor:pointer;border:0;color:var(--night);background:linear-gradient(135deg,var(--gold),var(--rose));border-radius:999px;padding:14px 30px;font-size:1.05rem;font-weight:600;box-shadow:0 0 34px #ff2e9366}
+button:focus-visible{outline:3px solid #fff;outline-offset:3px}
+#top{position:fixed;top:0;left:0;right:0;padding:calc(env(safe-area-inset-top,0px) + 16px) 20px 0;text-align:center;pointer-events:none;z-index:2;opacity:0;transition:opacity 1.5s .6s}
+#top.on{opacity:1}
+#top h2{font-weight:600;font-size:clamp(1.3rem,5vw,2rem);text-shadow:0 2px 18px #000a}
+#top small{color:var(--gold);font-size:.9rem}
+#bar{position:fixed;left:0;right:0;bottom:0;padding:16px 20px calc(env(safe-area-inset-bottom,0px) + 18px);display:flex;flex-direction:column;align-items:center;gap:10px;z-index:2;opacity:0;transition:opacity 1.5s .6s}
+#bar.on{opacity:1}
+#hint{font-size:.85rem;color:#ffd9e5cc}
+#lb,#note{z-index:6;background:#04050fe6;backdrop-filter:blur(8px)}
+#lb img{max-width:min(92vw,720px);max-height:72vh;border-radius:6px;border:8px solid #fff;box-shadow:0 20px 70px #000a}
+#lb p,#note p{margin:18px 0 22px;max-width:34ch;font-size:1.25rem;line-height:1.8;color:var(--blush)}
+#note .sig{color:var(--gold);margin:0 0 26px}
+#lb,#note{cursor:pointer}
+#tabs{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.tab{padding:10px 16px;font-size:.9rem;font-weight:400;background:#ffffff1f;color:var(--ink);box-shadow:none;border:1px solid #ffffff33;backdrop-filter:blur(10px);border-radius:10px}
+.tab.on{background:linear-gradient(135deg,var(--gold),var(--rose));color:var(--night);font-weight:600;border-color:transparent}
+#top small{display:block;margin-top:4px}
+@media (prefers-reduced-motion:reduce){.ov,#top,#bar{transition:none}}
+</style>
+</head>
+<body>
+<canvas id="c" aria-label="Interactive 3D photo ring"></canvas>
+
+<div id="intro" class="ov">
+  <h1 id="title"></h1>
+  <p>২৫ সেপ্টেম্বর। শুধু তোমার জন্য একটা ছোট্ট উপহার।</p><p id="cd" style="margin:-18px 0 30px;font-size:.95rem;color:var(--blush)"></p>
+  <button id="go">উপহার খোলো</button>
+</div>
+
+<div id="top"><h2 id="t2"></h2><small></small><b id="lc"></b></div>
+<div id="bar"><button id="mic" class="tab" style="display:none">মাইকে ফুঁ দাও</button><div id="tabs"><button class="tab on" data-p="ring">স্মৃতি</button><button class="tab" data-p="gift">উপহার</button><button class="tab" data-p="cake">কেক</button><button class="tab" data-p="love">কারণ</button><button class="tab" id="letter">চিঠি</button><button class="tab" id="mu">গান: বন্ধ</button></div></div>
+
+<div id="lb" class="ov off" role="dialog" aria-label="Photo"><img alt=""><p></p></div>
+<div id="note" class="ov off" role="dialog" aria-label="Birthday note"><p id="nt"></p><p class="sig" id="sg"></p><button id="cl">ফিরে যাই</button></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/* ========= EDIT THIS PART ========= */
+const CONFIG = {
+  name: 'ওলি',
+  from: 'ডোরেমন',
+  audio: '',   // তোমার গান: music.mp3 ফাইলটা index.html-এর পাশে রেখে এখানে 'music.mp3' লেখো (ফাঁকা রাখলে বিল্ট-ইন সুর বাজবে)
+  since: '',     // কবে থেকে একসাথে, যেমন '2020-02-14' (ফাঁকা রাখলে কাউন্টার লুকানো থাকবে)
+  love: 'ভালোবাসি তোমাকে, ওলি',
+  note: "শুভ জন্মদিন ওলি, আবারও একবছর বয়স বেড়ে গেলো তোমার। তুমি হলে বুড়ি আর আমি তোমার বুড়ো। একসাথে সারাজীবন থাকবো, এই প্রতিজ্ঞা করলাম।",
+  gifts: ['কুপন: তোমার পছন্দের যেকোনো জায়গায় ডিনার, আমার পক্ষ থেকে।','কুপন: একটা আলসে সকাল আর বিছানায় ব্রেকফাস্ট।','কুপন: পুরো একটা দিন সব সিদ্ধান্ত তোমার।'],
+  reasons: ['তোমার হাসি আমার খারাপ দিনও ঠিক করে দেয়।','সাধারণ দিনকেও তুমি বিশেষ করে তোলো।','কেউ না দেখলেও তুমি সবার প্রতি সদয়।','আমার আগেই তুমি আমার ওপর বিশ্বাস রাখো।','তুমি যেখানে, আমার ঘর সেখানেই।','ছোট পরিকল্পনাকেও তুমি বড় স্মৃতি বানিয়ে ফেলো।','তুমি একই সাথে সাহসী আর কোমল।','আমার সেরা বন্ধুকেই আমি বিয়ে করতে যাচ্ছি।'],
+  secret: 'তুমি গোপন হার্টটা খুঁজে পেয়েছ। এই ওয়েবপেজে যতটুকু ধরে, তার চেয়েও বেশি ভালোবাসি তোমাকে।',
+  // photos/ ফোল্ডারের ছবির ফাইলের নাম এখানে লেখো। ফাইলের নামই ছবির শিরোনাম হবে
+  // (হাইফেন/আন্ডারস্কোর বদলে স্পেস হবে, শুরুর নম্বর ক্রম ঠিক করবে কিন্তু দেখাবে না)।
+  photos: ['01-আমাদের-প্রথম-দেখা.jpg','02-তোমার-হাসি.jpg','03-একসাথে-ঘুরতে-যাওয়া.jpg','04-আমার-প্রিয়-দিন.jpg','05-তুমি-আর-আমি.jpg','06-সবচেয়ে-সুন্দর-মুহূর্ত.jpg']
+};
+/* ================================== */
+CONFIG.photos=CONFIG.photos.map(f=>({src:'photos/'+encodeURIComponent(f),cap:decodeURIComponent(f).replace(/\.[a-z0-9]+$/i,'').replace(/[-_]+/g,' ').replace(/^[\d০-৯]+\s*/,'').trim()||'আমাদের স্মৃতি'}));
+
+const $=s=>document.querySelector(s);
+$('#title').textContent='শুভ জন্মদিন, '+CONFIG.name;
+$('#t2').textContent='শুভ জন্মদিন, '+CONFIG.name;
+$('#nt').textContent=CONFIG.note;
+$('#sg').textContent='অনেক ভালোবাসায়'+(CONFIG.from?', '+CONFIG.from:'');
+
+const cv=$('#c'),R=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:false});
+R.setPixelRatio(Math.min(devicePixelRatio,2));
+const S=new THREE.Scene();S.background=new THREE.Color(0x04050f);S.fog=new THREE.Fog(0x04050f,10,30);
+const cam=new THREE.PerspectiveCamera(55,1,.1,80);
+S.add(new THREE.AmbientLight(0x9fb4ff,.7));
+const pl=new THREE.PointLight(0xff2e93,2.2,30);pl.position.set(0,2,3);S.add(pl);
+const pl2=new THREE.PointLight(0x00e5ff,1.2,30);pl2.position.set(-4,-2,-4);S.add(pl2);
+
+/* stars */
+(function(){const n=900,p=new Float32Array(n*3);for(let i=0;i<n;i++){const r=14+Math.random()*16,a=Math.random()*6.283,b=Math.acos(2*Math.random()-1);p[i*3]=r*Math.sin(b)*Math.cos(a);p[i*3+1]=r*Math.cos(b);p[i*3+2]=r*Math.sin(b)*Math.sin(a)}
+const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(p,3));
+S.add(new THREE.Points(g,new THREE.PointsMaterial({color:0x9fefff,size:.09,transparent:true,opacity:.8})))})();
+
+/* central heart */
+const hs=new THREE.Shape();hs.moveTo(0,-1);hs.bezierCurveTo(-.2,-.7,-1.2,-.2,-1.2,.5);hs.bezierCurveTo(-1.2,1.1,-.5,1.4,0,.8);hs.bezierCurveTo(.5,1.4,1.2,1.1,1.2,.5);hs.bezierCurveTo(1.2,-.2,.2,-.7,0,-1);
+const heart=new THREE.Mesh(new THREE.ExtrudeGeometry(hs,{depth:.5,bevelEnabled:true,bevelSize:.14,bevelThickness:.14,bevelSegments:6,curveSegments:24}),
+ new THREE.MeshStandardMaterial({color:0xff2e93,emissive:0x6a0a48,roughness:.25,metalness:.35}));
+heart.geometry.center();heart.scale.setScalar(.9);S.add(heart);
+
+/* floating hearts (sprites) */
+function heartTex(){const c=document.createElement('canvas');c.width=c.height=64;const x=c.getContext('2d');x.fillStyle='#fff';x.beginPath();x.moveTo(32,56);x.bezierCurveTo(-8,28,10,2,32,20);x.bezierCurveTo(54,2,72,28,32,56);x.fill();return new THREE.CanvasTexture(c)}
+const HN=110,hp=new Float32Array(HN*3),hv=new Float32Array(HN);
+for(let i=0;i<HN;i++){const a=Math.random()*6.283,r=3+Math.random()*9;hp[i*3]=Math.cos(a)*r;hp[i*3+1]=Math.random()*16-8;hp[i*3+2]=Math.sin(a)*r;hv[i]=.15+Math.random()*.35}
+const hg=new THREE.BufferGeometry();hg.setAttribute('position',new THREE.BufferAttribute(hp,3));
+S.add(new THREE.Points(hg,new THREE.PointsMaterial({map:heartTex(),color:0xff8fb1,size:.55,transparent:true,opacity:.75,depthWrite:false,alphaTest:.05})));
+
+const labs=[];function lab(t){const c=document.createElement('canvas');c.width=640;c.height=100;const x=c.getContext('2d');x.font='600 46px "Anek Bangla",sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillStyle='#d6f6ff';x.shadowColor='#00e5ff';x.shadowBlur=14;x.fillText(t,320,50,600);return c}
+/* photo ring */
+const ring=new THREE.Group();S.add(ring);
+const items=[],N=CONFIG.photos.length,RAD=Math.max(5.2,N*.72);
+function placeholder(i){const c=document.createElement('canvas');c.width=400;c.height=500;const x=c.getContext('2d');
+ const g=x.createLinearGradient(0,0,400,500);g.addColorStop(0,'#00e5ff');g.addColorStop(1,'#7b2ff7');x.fillStyle=g;x.fillRect(0,0,400,500);
+ x.fillStyle='#fff';x.textAlign='center';x.font='600 40px sans-serif';x.fillText('ছবি '+(i+1),200,260);return new THREE.CanvasTexture(c)}
+const loader=new THREE.TextureLoader();
+CONFIG.photos.forEach((p,i)=>{
+ const a=i/N*Math.PI*2,g=new THREE.Group();
+ const frame=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),new THREE.MeshStandardMaterial({color:0x001a24,emissive:0x00a8c4,roughness:.3}));
+ const pic=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial({map:placeholder(i)}));pic.position.z=.06;
+ const lb=new THREE.Mesh(new THREE.PlaneGeometry(3.2,.5),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(lab(p.cap)),transparent:true}));lb.position.set(0,-1.75,.06);g.add(frame,pic,lb);labs.push([lb,p.cap]);
+ function fit(w,h){const s=2.7/Math.max(w,h);pic.scale.set(w*s,h*s,1);frame.scale.set(w*s+.22,h*s+.22,.1)}
+ fit(4,5);
+ g.position.set(Math.sin(a)*RAD,0,Math.cos(a)*RAD);g.rotation.y=a;g.userData={i,phase:Math.random()*6};
+ pic.userData.i=i;ring.add(g);items.push({g,pic,ok:false,fit});
+ loader.load(p.src,t=>{t.encoding=THREE.sRGBEncoding;pic.material.map=t;pic.material.needsUpdate=true;items[i].ok=true;fit(t.image.width,t.image.height)},undefined,()=>{})
+});
+
+/* confetti */
+const CN=260,cp=new Float32Array(CN*3),cc=new Float32Array(CN*3),cvl=[];let cAlive=0;
+const pal=[0xff2e93,0x00e5ff,0xffffff,0xb388ff].map(h=>new THREE.Color(h));
+for(let i=0;i<CN;i++){const c=pal[i%4];cc.set([c.r,c.g,c.b],i*3);cvl.push(new THREE.Vector3())}
+const cg=new THREE.BufferGeometry();cg.setAttribute('position',new THREE.BufferAttribute(cp,3));cg.setAttribute('color',new THREE.BufferAttribute(cc,3));
+const conf=new THREE.Points(cg,new THREE.PointsMaterial({size:.14,vertexColors:true,transparent:true,opacity:.95}));conf.frustumCulled=false;S.add(conf);
+function burst(){cAlive=4;for(let i=0;i<CN;i++){cp.set([0,0,2],i*3);cvl[i].set((Math.random()-.5)*9,Math.random()*7+1,(Math.random()-.2)*5)}}
+
+/* view + interaction */
+function size(){const w=innerWidth,h=innerHeight;R.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix();cam.userData.z=w/h<.8?RAD+6.5:RAD+3.2}
+addEventListener('resize',size);size();
+let rot=0,vel=.0022,drag=false,moved=0,lx=0,px=0,py=0,started=false;
+cv.addEventListener('pointerdown',e=>{drag=true;moved=0;lx=e.clientX;cv.setPointerCapture(e.pointerId)});
+cv.addEventListener('pointermove',e=>{px=e.clientX/innerWidth-.5;py=e.clientY/innerHeight-.5;if(!drag)return;const d=e.clientX-lx;lx=e.clientX;moved+=Math.abs(d);vel=d*.006});
+cv.addEventListener('pointerup',e=>{drag=false;if(moved<6&&started)tap(e)});
+const ray=new THREE.Raycaster(),m=new THREE.Vector2();
+function pick(e){m.set(e.clientX/innerWidth*2-1,-(e.clientY/innerHeight)*2+1);ray.setFromCamera(m,cam);
+ const h=ray.intersectObjects(items.map(o=>o.pic))[0];if(!h)return;const i=h.object.userData.i,it=items[i];
+ const img=$('#lb img');img.style.display=it.ok?'':'none';img.src=it.ok?CONFIG.photos[i].src:'';$('#lb p').textContent=CONFIG.photos[i].cap;$('#lb').classList.remove('off')}
+$('#lb').onclick=()=>$('#lb').classList.add('off');
+$('#letter').onclick=()=>{openNote(CONFIG.note,SIG);burst()};
+$('#cl').onclick=e=>{e.stopPropagation();$('#note').classList.add('off')};
+$('#go').onclick=()=>{A();music(true);$('#intro').classList.add('off');$('#top').classList.add('on');$('#bar').classList.add('on');started=true;burst()};
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){$('#lb').classList.add('off');$('#note').classList.add('off')}});
+
+/* ===== extra pages ===== */
+const mk=(g,m,x=0,y=0,z=0)=>{const o=new THREE.Mesh(g,m);o.position.set(x,y,z);return o};
+const MT=(c,e=0,r=.4,me=.1)=>new THREE.MeshStandardMaterial({color:c,emissive:e,roughness:r,metalness:me});
+const V3=THREE.Vector3,SIG=$('#sg').textContent;
+let page='ring',pt=0,hb=0,gOpen=0,gp=0,ci=0,lit=true,fwT=0;
+function openNote(t,s){$('#nt').textContent=t;$('#sg').textContent=s;$('#note').classList.remove('off')}
+const camZ=()=>{const p=innerWidth/innerHeight<.8;return {ring:p?RAD+6.5:RAD+3.2,gift:p?12:8,cake:p?13:9,love:p?14:11}[page]};
+
+/* fireworks */
+const FN=900,fp=new Float32Array(FN*3),fc=new Float32Array(FN*3),fv=Array.from({length:FN},()=>new V3());let fi=0;
+const fg=new THREE.BufferGeometry();fg.setAttribute('position',new THREE.BufferAttribute(fp,3));fg.setAttribute('color',new THREE.BufferAttribute(fc,3));
+const fx=new THREE.Points(fg,new THREE.PointsMaterial({size:.16,vertexColors:true,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}));fx.frustumCulled=false;S.add(fx);
+function fw(x,y,z,col=pal[Math.random()*4|0],n=80){pop();for(let k=0;k<n;k++){const i=fi++%FN,a=Math.random()*6.283,b=Math.acos(2*Math.random()-1),v=2+Math.random()*3;fp.set([x,y,z],i*3);fv[i].set(Math.sin(b)*Math.cos(a)*v,Math.cos(b)*v,Math.sin(b)*Math.sin(a)*v);fc.set([col.r,col.g,col.b],i*3)}}
+
+/* gift */
+const giftG=new THREE.Group(),boxM=MT(0xff2e93,0x30081a),gold=MT(0x00e5ff,0x5a4310,.3,.6),lid=new THREE.Group();lid.position.y=.25;
+lid.add(mk(new THREE.BoxGeometry(3.4,.5,3.4),boxM),mk(new THREE.BoxGeometry(.5,.54,3.44),gold),mk(new THREE.BoxGeometry(3.44,.54,.5),gold));
+[-1,1].forEach(s=>{const b=mk(new THREE.TorusGeometry(.45,.13,10,24),gold,s*.5,.6,0);b.rotation.y=s*.6;lid.add(b)});
+const gl=new THREE.PointLight(0xffd0e0,0,14),gh=new THREE.Mesh(heart.geometry,heart.material);gl.position.y=1.2;gh.scale.setScalar(0);
+giftG.add(mk(new THREE.BoxGeometry(3,2,3),boxM,0,-1,0),mk(new THREE.BoxGeometry(.5,2.04,3.04),gold,0,-1,0),mk(new THREE.BoxGeometry(3.04,2.04,.5),gold,0,-1,0),lid,gl,gh);S.add(giftG);
+
+/* cake */
+const cakeG=new THREE.Group(),flames=[],cl=new THREE.PointLight(0xffb060,2.5,10);cl.position.y=2.2;
+cakeG.add(mk(new THREE.CylinderGeometry(3.1,3.1,.15,48),gold,0,-2.3,0),mk(new THREE.CylinderGeometry(2.6,2.6,1.3,48),MT(0xff9ebb,0x2a0a14,.6),0,-1.55,0),mk(new THREE.CylinderGeometry(1.7,1.7,1,48),MT(0xfff0f4,0x201018,.6),0,-.4,0),mk(new THREE.TorusGeometry(2.6,.12,10,48),MT(0xffffff),0,-.9,0),mk(new THREE.TorusGeometry(1.7,.1,10,48),MT(0xffffff),0,.1,0),cl);
+cakeG.children.slice(3,5).forEach(t=>t.rotation.x=Math.PI/2);
+for(let i=0;i<5;i++){const a=i/5*6.283,x=Math.cos(a)*.95,z=Math.sin(a)*.95;
+ cakeG.add(mk(new THREE.CylinderGeometry(.09,.09,.9,12),MT(i%2?0x00e5ff:0x8fd3ff),x,.55,z));
+ const f=mk(new THREE.SphereGeometry(1,12,12),new THREE.MeshBasicMaterial({color:0xffc861}),x,1.25,z);f.userData={s:1,i};flames.push(f);cakeG.add(f)}
+S.add(cakeG);
+
+/* reasons: flip cards */
+const loveG=new THREE.Group(),cards=[];
+function face(str,front){const c=document.createElement('canvas');c.width=360;c.height=480;const x=c.getContext('2d'),g=x.createLinearGradient(0,0,360,480);
+ g.addColorStop(0,front?'#ff2e93':'#fff2f6');g.addColorStop(1,front?'#7b2ff7':'#2a0a4a');x.fillStyle=g;x.fillRect(0,0,360,480);x.fillStyle=front?'#04050f':'#d6f6ff';x.textAlign='center';
+ if(front){x.font='120px serif';x.fillText('\u2665',180,270)}else{x.font='600 32px "Anek Bangla",sans-serif';let l='',y=170;str.split(' ').forEach(w=>{if(x.measureText(l+w).width>290){x.fillText(l,180,y);y+=46;l=''}l+=w+' '});x.fillText(l,180,y)}
+ return new THREE.CanvasTexture(c)}
+CONFIG.reasons.forEach((r,i)=>{const g=new THREE.Group(),p=new THREE.Group(),a=i/CONFIG.reasons.length*6.283,h=(i%3-1)*2;
+ const b=mk(new THREE.PlaneGeometry(2.4,3.2),new THREE.MeshBasicMaterial({map:face(r,0)}));b.rotation.y=Math.PI;
+ p.add(mk(new THREE.PlaneGeometry(2.4,3.2),new THREE.MeshBasicMaterial({map:face('',1)})),b);g.add(p);
+ g.position.set(Math.sin(a)*4.8,h,Math.cos(a)*4.8);g.rotation.y=a;g.userData={p,to:0,h};loveG.add(g);cards.push(g)});
+S.add(loveG);
+
+/* page switching + taps */
+const grp={ring:[ring,heart],gift:[giftG],cake:[cakeG],love:[loveG]};
+const HT={ring:'ঘোরাতে টেনে ধরো। ছবিতে ট্যাপ করো। হার্টে কয়েকবার ট্যাপ করো।',gift:'উপহার খুলতে ট্যাপ করো। আবার ট্যাপ করলে আরও পাবে।',cake:'মনে মনে ইচ্ছে করো, তারপর কেকে ট্যাপ করে মোমবাতি নেভাও।',love:'ঘোরাতে টেনে ধরো। কার্ডে ট্যাপ করলে উল্টে যাবে।'};
+function goto(p){page=p;pt=0;fwT=0;gOpen=0;lit=true;for(const k in grp)grp[k].forEach(o=>o.visible=k===p);
+ document.querySelectorAll('.tab[data-p]').forEach(b=>b.classList.toggle('on',b.dataset.p===p));$('#top small').textContent=HT[p];$('#mic').style.display=p==='cake'?'':'none'}
+document.querySelectorAll('.tab[data-p]').forEach(b=>b.onclick=()=>goto(b.dataset.p));
+function tap(e){m.set(e.clientX/innerWidth*2-1,-(e.clientY/innerHeight)*2+1);ray.setFromCamera(m,cam);
+ if(page==='ring'){if(ray.intersectObject(heart).length){if(++hb%5===0)openNote(CONFIG.secret,'তুমি গোপন হার্টটা খুঁজে পেয়েছ');else fw(0,0,0,pal[0],30)}else pick(e)}
+ else if(page==='gift'){if(ray.intersectObject(giftG,true).length){gOpen=1;fw(0,2,0);burst();openNote(CONFIG.gifts[ci++%CONFIG.gifts.length],'তোমার জন্য উপহার')}}
+ else if(page==='cake'){if(ray.intersectObject(cakeG,true).length){lit=!lit;fwT=lit?0:7;if(!lit)cheer();$('#top small').textContent=lit?HT.cake:'তোমার ইচ্ছেটা পথে আছে। আবার জ্বালাতে কেকে ট্যাপ করো।'}}
+ else{const h=ray.intersectObject(loveG,true)[0];if(h){const u=h.object.parent.parent.userData;u.to=u.to?0:Math.PI}}}
+function tick(dt,t){if(an)mic(dt);
+ pt+=dt*1.6;const G=grp[page][0];G.scale.setScalar(1-Math.pow(1-Math.min(pt,1),3));if(page!=='ring')G.rotation.y=rot;
+ gp+=(gOpen-gp)*.06;lid.position.y=.25+gp*3.2;lid.rotation.z=gp*.9;gh.scale.setScalar(gp*.75);gh.position.y=-.2+gp*2.4;gh.rotation.y=t;gl.intensity=gp*4;
+ cl.intensity+=((lit?2.5:0)-cl.intensity)*.15;
+ flames.forEach(f=>{const u=f.userData;u.s+=((lit?1:0)-u.s)*.15;f.scale.set(.1*u.s,.2*u.s*(1+.25*Math.sin(t*22+u.i)),.1*u.s)});
+ cards.forEach((g,i)=>{const u=g.userData;u.p.rotation.y+=(u.to-u.p.rotation.y)*.12;g.position.y=u.h+Math.sin(t+i)*.15});
+ if(fwT>0){fwT-=dt;if(Math.random()<dt*3)fw((Math.random()-.5)*12,2+Math.random()*4,-3-Math.random()*4)}
+ for(let i=0;i<FN;i++){const j=i*3;if(fc[j]+fc[j+1]+fc[j+2]<.02)continue;fv[i].y-=2.5*dt;fp[j]+=fv[i].x*dt;fp[j+1]+=fv[i].y*dt;fp[j+2]+=fv[i].z*dt;fv[i].multiplyScalar(.985);fc[j]*=.975;fc[j+1]*=.975;fc[j+2]*=.975}
+ fg.attributes.position.needsUpdate=fg.attributes.color.needsUpdate=true}
+/* mic blow-out */
+/* sound effects (synthesised) */
+let sx=null;const A=()=>{if(!sx)sx=new (window.AudioContext||window.webkitAudioContext)();if(sx.state==='suspended')sx.resume();return sx};
+function tone(f,t0,d,v=.15,ty='sine'){const c=A(),o=c.createOscillator(),g=c.createGain(),T=c.currentTime+t0;o.type=ty;o.frequency.value=f;g.gain.setValueAtTime(.0001,T);g.gain.exponentialRampToValueAtTime(v,T+.02);g.gain.exponentialRampToValueAtTime(.0001,T+d);o.connect(g);g.connect(c.destination);o.start(T);o.stop(T+d+.05)}
+function noise(d,v,fq){const c=A(),n=Math.floor(c.sampleRate*d),b=c.createBuffer(1,n,c.sampleRate),o=b.getChannelData(0);for(let i=0;i<n;i++)o[i]=(Math.random()*2-1)*(1-i/n);const q=c.createBufferSource(),f=c.createBiquadFilter(),g=c.createGain();q.buffer=b;f.type='lowpass';f.frequency.value=fq;g.gain.value=v;q.connect(f);f.connect(g);g.connect(c.destination);q.start()}
+const pop=()=>{try{noise(.35,.3,1400)}catch(e){}};
+function cheer(){try{noise(.6,.3,900);[523,659,784,1047,1319].forEach((f,i)=>tone(f,.25+i*.12,.7,.12,'triangle'))}catch(e){}}
+
+/* mic blow-out */
+let an=null,buf=null,blowT=0,base=0,mst=null,mctx=null;
+function micStop(){if(mst){mst.getTracks().forEach(t=>t.stop());mst=null}if(mctx){mctx.close();mctx=null}an=null;const b=$('#mic');b.textContent='মাইকে ফুঁ দাও';b.style.boxShadow='';
+ if(ac&&ac.state!=='running')ac.resume();if(au&&au.paused&&mon)au.play().catch(()=>{})}
+$('#mic').onclick=async()=>{const b=$('#mic');if(an){micStop();return}A();
+ if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){b.textContent='https লিংকে খোলো। এখন কেকে ট্যাপ করো।';return}
+ try{mst=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+  mctx=new (window.AudioContext||window.webkitAudioContext)();await mctx.resume();const a=mctx.createAnalyser();a.fftSize=1024;mctx.createMediaStreamSource(mst).connect(a);
+  buf=new Uint8Array(1024);base=0;blowT=0;an=a;b.textContent='শুনছি... মাইকের কাছে ফুঁ দাও!'}
+ catch(e){micStop();b.textContent=e&&e.name==='NotAllowedError'?'মাইকের অনুমতি দাও, নয়তো কেকে ট্যাপ করো':'মাইক পাওয়া যাচ্ছে না। কেকে ট্যাপ করো।'}};
+function mic(dt){if(!an)return;if(page!=='cake'){micStop();return}if(!lit){blowT=0;return}
+ an.getByteTimeDomainData(buf);let q=0;for(const v of buf)q+=(v-128)*(v-128);const r=Math.sqrt(q/buf.length)/128;
+ $('#mic').style.boxShadow='0 0 '+Math.min(40,r*250)+'px #00e5ff';
+ if(r>Math.max(.12,base*2.5+.05))blowT+=dt;else{blowT=0;base=base?base*.98+r*.02:r}
+ if(blowT>.25){lit=false;fwT=7;blowT=0;$('#top small').textContent='তোমার ইচ্ছেটা পথে আছে। আবার জ্বালাতে কেকে ট্যাপ করো।';cheer();micStop()}}
+
+/* music box (Happy Birthday, synthesised) */
+let ac=null,mt=0;const SQ=[[67,.75],[67,.25],[69,1],[67,1],[72,1],[71,2],[67,.75],[67,.25],[69,1],[67,1],[74,1],[72,2],[67,.75],[67,.25],[79,1],[76,1],[72,1],[71,1],[69,1.5],[77,.75],[77,.25],[76,1],[72,1],[74,1],[72,2]];
+function song(){if(!ac)return;let t=ac.currentTime+.1;SQ.forEach(([n,b])=>{const o=ac.createOscillator(),g=ac.createGain(),d=b*.5;o.type='triangle';o.frequency.value=440*Math.pow(2,(n-69)/12);
+ g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.12,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+d+.5);o.connect(g);g.connect(ac.destination);o.start(t);o.stop(t+d+.6);t+=d});
+ mt=setTimeout(song,(t-ac.currentTime+2)*1000)}
+let mon=false,au=null;
+function music(on){mon=on;clearTimeout(mt);if(ac){ac.close();ac=null}if(au){au.pause();au=null}
+ if(on&&CONFIG.audio){au=new Audio(CONFIG.audio);au.loop=true;au.play().catch(()=>{})}
+ else if(on){ac=new (window.AudioContext||window.webkitAudioContext)();song()}
+ $('#mu').textContent=on?'গান: চালু':'গান: বন্ধ'}
+$('#mu').onclick=()=>music(!mon);
+
+/* countdown */
+(function(){const el=$('#cd'),bn=n=>n.toLocaleString('bn-BD');function u(){const n=new Date(),d=new Date(n.getFullYear(),8,25)-n;
+ if(d>0&&d<40*864e5)el.textContent=bn(Math.floor(d/864e5))+' দিন '+bn(Math.floor(d/36e5)%24)+' ঘণ্টা '+bn(Math.floor(d/6e4)%60)+' মিনিট '+bn(Math.floor(d/1e3)%60)+' সেকেন্ড বাকি তোমার জন্মদিনে';
+ else el.textContent=(n.getMonth()===8&&n.getDate()===25)?'আজ তোমার জন্মদিন!':''}
+u();setInterval(u,1000)})();
+/* futuristic scenery */
+const grid=new THREE.GridHelper(80,60,0x00e5ff,0x14306b);grid.position.y=-4.5;grid.material.transparent=true;grid.material.opacity=.4;S.add(grid);
+const orb=[0x00e5ff,0xff2e93].map((c,i)=>{const r=new THREE.Mesh(new THREE.TorusGeometry(2.1+i*.5,.02,8,120),new THREE.MeshBasicMaterial({color:c}));r.rotation.x=1.2+i;S.add(r);return r});
+heart.add(new THREE.LineSegments(new THREE.EdgesGeometry(heart.geometry,25),new THREE.LineBasicMaterial({color:0x9fefff})));
+function lvTex(){const c=document.createElement('canvas');c.width=1024;c.height=256;const x=c.getContext('2d'),g=x.createLinearGradient(0,0,1024,0);x.font='700 110px "Anek Bangla",sans-serif';x.textAlign='center';x.textBaseline='middle';x.shadowColor='#ff2e93';x.shadowBlur=40;g.addColorStop(0,'#00e5ff');g.addColorStop(1,'#ff2e93');x.fillStyle=g;x.fillText(CONFIG.love,512,128,980);return new THREE.CanvasTexture(c)}
+const lv=new THREE.Sprite(new THREE.SpriteMaterial({map:lvTex(),transparent:true,depthWrite:false}));lv.scale.set(6.5,1.6,1);lv.position.y=2.7;S.add(lv);grp.ring.push(lv,...orb);
+(function o(){requestAnimationFrame(o);const t=performance.now()/1e3;orb.forEach((r,i)=>r.rotation.z=t*(.5+i*.3)*(i?-1:1))})();
+Promise.all(['700','600'].map(w=>document.fonts.load(w+' 40px "Anek Bangla"','অ'))).then(()=>{lv.material.map=lvTex();lv.material.needsUpdate=true;
+ labs.forEach(([m,t])=>{m.material.map=new THREE.CanvasTexture(lab(t));m.material.needsUpdate=true});
+ cards.forEach((g,i)=>{const q=g.userData.p.children[1].material;q.map=face(CONFIG.reasons[i],0);q.needsUpdate=true})}).catch(()=>{});
+/* love counter */
+(function(){const el=$('#lc');if(!CONFIG.since)return;const bn=n=>n.toLocaleString('bn-BD');function u(){const d=new Date()-new Date(CONFIG.since);el.style.display=page==='ring'?'':'none';
+ el.textContent='একসাথে '+bn(Math.floor(d/864e5))+' দিন '+bn(Math.floor(d/36e5)%24)+' ঘণ্টা '+bn(Math.floor(d/6e4)%60)+' মিনিট '+bn(Math.floor(d/1e3)%60)+' সেকেন্ড ♥'}u();setInterval(u,1000)})();
+goto('ring');
+
+const clock=new THREE.Clock(),still=matchMedia('(prefers-reduced-motion:reduce)').matches;
+cam.position.set(0,1.2,RAD+3.2);
+(function loop(){requestAnimationFrame(loop);const dt=Math.min(clock.getDelta(),.05),t=clock.elapsedTime;
+ if(!drag){rot+=vel;vel+=((still?0:.0022)-vel)*.02}else rot+=vel;
+ ring.rotation.y=rot;tick(dt,t);
+ items.forEach(o=>{o.g.position.y=still?0:Math.sin(t*.9+o.g.userData.phase)*.18});
+ heart.rotation.y=t*.6;const bp=1+Math.sin(t*2.4)*.06;heart.scale.setScalar(.9*bp);
+ for(let i=0;i<HN;i++){hp[i*3+1]+=hv[i]*dt;if(hp[i*3+1]>9)hp[i*3+1]=-9}hg.attributes.position.needsUpdate=true;
+ if(cAlive>0){cAlive-=dt;for(let i=0;i<CN;i++){cvl[i].y-=6*dt;cp[i*3]+=cvl[i].x*dt;cp[i*3+1]+=cvl[i].y*dt;cp[i*3+2]+=cvl[i].z*dt}cg.attributes.position.needsUpdate=true;conf.material.opacity=Math.min(1,cAlive)}else conf.material.opacity=0;
+ cam.position.x+=(px*2.2-cam.position.x)*.04;cam.position.y+=(1.2-py*1.6-cam.position.y)*.04;cam.position.z+=(camZ()-cam.position.z)*.05;
+ cam.lookAt(0,0,0);R.render(S,cam)})();
+</script>
+</body>
+</html>
